@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "Package: SPAC2\nType: Package\nTitle: Statistical and Probabilistic Algorithm for Classification and Clustering\nVersion: 0.9.3\nAuthor: Wei Q. Deng, Radu R. Craiu\nMaintainer: Wei Q. Deng <deng@utstat.toronto.edu>\nDescription: This package provides a penalized approach to estimate the number\n    of principal components from either a list of sample eigenvalues or a data \n    matrix on which the sample eigenvalues can be derived. The data structure \n    is constraint under an isotropic error model with non-zero error variance\n    in the context of Probabilistic Principal Components Analysis (PPCA). \n    The package also provides various functions to simulate either the\n    sample eigenvalue or the data matrix under specific structures or \n    possibly with violation to the normality and independence assumption. \n    The number of PCs uncovered can be then used as inputs for a variety of \n    subsequent analysis such as clustering. The main function is demonstrated \n    on a gene expression dataset included in the package.\nLicense: GPL-2\nEncoding: UTF-8\nImports: MASS, \n    Matrix, \n    mvtnorm,\n    pracma, \n    psych,\nDepends: R (>= 3.1.0)\nRecommends: R (>= 3.4.1)\nSuggests: cluster, mclust\nLazyData: true\nRoxygenNote: 6.0.1\n",
+    "created" : 1521437299831.000,
+    "dirty" : true,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1774957077",
+    "id" : "50067FD0",
+    "lastKnownWriteTime" : 1521438614,
+    "last_content_update" : 1521438713496,
+    "path" : "~/Documents/AcademicResearch/kraken_files/WeiGit/SPAC2/DESCRIPTION",
+    "project_path" : "DESCRIPTION",
+    "properties" : {
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "dcf"
+}
