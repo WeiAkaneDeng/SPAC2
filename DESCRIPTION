@@ -1,0 +1,29 @@
+Package: SPAC2
+Type: Package
+Title: Statistical and Probabilistic Algorithm for Classification and Clustering
+Version: 0.9.3
+Author: Wei Q. Deng, Radu R. Craiu
+Maintainer: Wei Q. Deng <deng@utstat.toronto.edu>
+Description: This package provides a penalized approach to estimate the number
+    of principal components from either a list of sample eigenvalues or a data 
+    matrix on which the sample eigenvalues can be derived. The data structure 
+    is constraint under an isotropic error model with non-zero error variance
+    in the context of Probabilistic Principal Components Analysis (PPCA). 
+    The package also provides various functions to simulate either the
+    sample eigenvalue or the data matrix under specific structures or 
+    possibly with violation to the normality and independence assumption. 
+    The number of PCs uncovered can be then used as inputs for a variety of 
+    subsequent analysis such as clustering. The main function is demonstrated 
+    on a gene expression dataset included in the package.
+License: GPL-2
+Encoding: UTF-8
+Imports: MASS, 
+    Matrix, 
+    mvtnorm,
+    pracma, 
+    psych,
+Depends: R (>= 3.1.0)
+Recommends: R (>= 3.4.1)
+Suggests: cluster, mclust
+LazyData: true
+RoxygenNote: 6.0.1
