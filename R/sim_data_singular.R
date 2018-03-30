@@ -46,7 +46,8 @@
 #' @author Wei Q. Deng, \email{deng@utstat.toronto.edu}
 #'
 #'
-
+#' @export
+#'
 get_data_singular <- function(N, K, M, sq_singular = NULL,
                               sigma2 = NULL, last= NULL, trend = NULL,
                               rho = NULL, df = NULL, dist = "norm",

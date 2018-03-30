@@ -47,7 +47,8 @@
 #'
 #' @keywords probabilistic PCA, Expectation and Maximization, Maximum Likelihood Estimates, profile log-likelihood
 #'
-
+#' @export
+#'
 ppcaLog <- function(x = NULL, lambda = NULL, M = NULL, param = NULL, EM = FALSE) {
 
   if (is.null(x) && is.null(lambda)) {

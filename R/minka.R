@@ -22,7 +22,8 @@
 #' @references Minka, T. P. (2000). Automatic choice of dimensionality for PCA.
 #' In \emph{NIPS} (Vol. \strong{13}, pp. 598-604).
 #'
-
+#' @export
+#'
 minka2001 <- function(x = NULL, lambda=NULL, M = NULL, evidence = FALSE) {
 
   if (is.null(x) && is.null(lambda)) {
@@ -101,7 +102,7 @@ minka2001 <- function(x = NULL, lambda=NULL, M = NULL, evidence = FALSE) {
 #' @references Minka, T. P. (2000). Automatic choice of dimensionality for PCA.
 #' In \emph{NIPS} (Vol. \strong{13}, pp. 598-604).
 #'
-
+#' @export
 
 minka2001_BIC <- function(x = NULL, lambda=NULL, M = NULL,evidence = FALSE) {
 

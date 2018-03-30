@@ -46,7 +46,8 @@
 #' @keywords probabilistic PCA, penalized probabilistic PCA, profile log-likelihood,
 #'    penalty tuning parameter, effective dimension
 #'
-
+#' @export
+#'
 pPPCA <- function(x = NULL, eigenvals = NULL, Tvotes = 5000,
                   var_tol = 1e-5, tol = 1e-06, maxits = 500,
                   printComp = F, verbose = F) {

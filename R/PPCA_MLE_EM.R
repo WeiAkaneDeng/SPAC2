@@ -32,6 +32,8 @@
 #'
 #' @keywords probabilistic PCA, Expectation and Maximization, Maximum Likelihood Estimates
 #'
+#' @export
+#'
 
 
 ppcaMLE <- function(x, nComp = 2, tol = 1e-06, maxits = 100) {

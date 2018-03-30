@@ -24,7 +24,8 @@
 #'
 #' @keywords probabilistic PCA, penalized probabilistic PCA, profile log-likelihood, penalty
 #'
-
+#' @export
+#'
 pppcaProfile <- function(delta, x = NULL, lambda = NULL, M = NULL, lk = FALSE) {
 
   if (is.null(x) && is.null(lambda)) {

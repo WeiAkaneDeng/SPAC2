@@ -20,7 +20,7 @@
 #' @references Schwarz, Gideon E. (1978), Estimating the dimension of a model,
 #'    \emph{Annals of Statistics}, \strong{6} (2): 461–464, MR 468014,
 #'    doi:10.1214/aos/1176344136
-#'
+#' @export
 
 BIC <- function(lambda, M) {
 
@@ -31,7 +31,6 @@ BIC <- function(lambda, M) {
         1)) * N + 1 - (1:(N - 1)) * ((1:(N - 1)) - 1)/2) * log(M)))
 }
 
-#----------------------------------------------------------------------------------
 
 #' Akaike Information Criterion for PPCA.
 #'
@@ -56,7 +55,7 @@ BIC <- function(lambda, M) {
 #' @references Akaike, H. (1974), A new look at the statistical model identification,
 #'    \emph{IEEE Transactions on Automatic Control}, \strong{19} (6): 716–723, MR 0423716,
 #'    doi:10.1109/TAC.1974.1100705.
-#'
+#' @export
 
 AIC <- function(lambda, M) {
 
@@ -91,7 +90,8 @@ AIC <- function(lambda, M) {
 #' @author Wei Q. Deng, \email{deng@@utstat.toronto.edu}
 #'
 #' @keywords sample eigenvalues, elbow approach
-
+#' @export
+#'
 elbowEigen <- function(lambda,
                        methods = c("adjD", "cumD", "varD", "cumlog", "logsigma2")){
 
@@ -138,7 +138,8 @@ elbowEigen <- function(lambda,
 #'
 #' @keywords hypothesis testing, likelihood ratio test,
 #'
-
+#' @export
+#'
 Lawley.Test <- function(lambda, M) {
 
   lambda <- as.numeric(lambda)
@@ -188,7 +189,8 @@ Lawley.Test <- function(lambda, M) {
 #'
 #' @keywords probabilistic PCA, cross validation, profile log-likelihood, model selection
 #'
-
+#' @export
+#'
 ppcaCV <- function(k = NULL, x = NULL, fold = 5) {
 
 
