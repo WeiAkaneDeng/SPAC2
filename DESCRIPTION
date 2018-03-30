@@ -5,7 +5,7 @@ Version: 0.9.3
 Author: Wei Q. Deng, Radu R. Craiu
 Maintainer: Wei Q. Deng <deng@utstat.toronto.edu>
 Description: This package provides a statistical algorithm that implements a
-penalized profile log-likelihood criterion to estimate the number of effective
+   penalized profile log-likelihood criterion to estimate the number of effective
    dimensions of a data matrix. The data structure is modeled similarly as in
    Probabilistic Principal Components Analysis (PPCA). The package also provides
    various functions to simulate either the sample eigenvalue or the data matrix
