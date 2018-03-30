@@ -108,7 +108,7 @@ get_data_singular <- function(N, K, M, sq_singular = NULL,
       U <- pracma::randortho(N)[,1:K]
       S <- U%*%diag(singular)%*%t(U) + diag(rep(sigma2, N))
       X <- MASS::mvrnorm(M, mu = rep(0,N), Sigma = S)
-      sam_eigen <- eigen(as.matrix(Matrix::nearPD((scale(X)))$mat))$val
+      sam_eigen  <- eigen(as.matrix(Matrix::nearPD(stats::cov(scale((X))))$mat))$val
 
     }else{
 
