@@ -37,7 +37,7 @@
 #' pPPCA(eigenvals = eigen_values) # supply the sample eigenvalues
 #' }
 #'
-#' @author Wei Q. Deng, \email{deng@@utstat.toronto.edu}
+#' @author Wei Q. Deng, \email{deng@@utstat.toronto.edu} and Radu V. Craiu \email{craiu@@utstat.toronto.edu}
 #'
 #' @references Tipping, M. E., and Bishop, C. M. (1999). Probabilistic principal component analysis.
 #'   \emph{Journal of the Royal Statistical Society: Series B (Statistical Methodology)},
@@ -200,36 +200,22 @@ pPPCA <- function(x = NULL, eigenvals = NULL, Tvotes = 5000,
 }
 
 
-
-#' Penalized Profile log-likeihood function
 #'
-#' The function returns the results of penalized profile
-#'    log-likelihood a vector of sample eigenvalues at a particular
-#'    penalty parameter value. The data matrix is assumed to follow the decomposition
-#'    \eqn{X = WL + \epsilon}, where rows of \eqn{X} are decomposed to a linear projection
-#'    in an orthogonal space plus error. The solution finds the
-#'    rank of \eqn{W}, which represents some hidden structure in
-#'    the data, such that \eqn{X-WL} have independent and
-#'    identically distributed components.
+#' Penalized profile log-likelihood of a PPPCA model
 #'
-#' @param eigenvals a numerical vector of sample eigenvalues
+#' The function returns either the penalized profile
+#'     log-likelihood or the value that maximizes the penalized
+#'     profile log-likelihood for a given tuning parameter value.
 #'
-#' @return an integer $K$ between 1 and $n$.
-#'
-#' @importFrom MASS mvrnorm
-#' @importFrom Matrix nearPD
-#' @importFrom mvtnorm dmvnorm
-#' @importFrom pracma orth
-#' @importFrom psych tr
+#' @param delta the value of the tuning parameter, must be a positive real number
+#' @param lambda a numerical vector of positive sample eigenvalues
+#' @param lk a logical specifying whether the penalized profile log-likelihood or
+#'     the integer that maximizes the penalized profile log-likelihood should be returned.
+#' @return an integer K that maximizes the penalized profile log-likelihood for the given \code{delta} value.
 #'
 #' @author Wei Q. Deng, \email{deng@@utstat.toronto.edu}
 #'
-#' @references Tipping, M. E., and Bishop, C. M. (1999). Probabilistic principal component analysis.
-#'   \emph{Journal of the Royal Statistical Society: Series B (Statistical Methodology)},
-#'   \strong{61}(3), 611-622.
-#'
-#' @keywords probabilistic PCA, penalized probabilistic PCA, profile log-likelihood,
-#'    penalty tuning parameter, effective dimension
+#' @keywords probabilistic PCA, penalized probabilistic PCA, profile log-likelihood, penalty
 #'
 #' @export
 #'

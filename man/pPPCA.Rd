@@ -4,7 +4,7 @@
 \alias{pPPCA}
 \title{Penalized Probabilistic PCA}
 \usage{
-pPPCA(x = NULL, eigenvals = NULL, Tvotes = 5000, var_tol = 1e-05,
+pPPCA(x = NULL, eigenvals = NULL, Tvotes = 5000, var_tol = 0.01,
   tol = 1e-06, maxits = 500, printComp = F, verbose = F)
 }
 \arguments{

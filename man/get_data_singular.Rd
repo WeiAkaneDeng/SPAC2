@@ -23,7 +23,7 @@ The other parameters can be skipped if this is supplied along with \eqn{N, K, M}
 between the Kth eigenvalue and the (\eqn{K}+1)th, a very large difference
 might not be possible if \eqn{K} is large.}
 
-\item{trend}{a character, one of \code{exponential}, \code{linear} and \code{quadratic}
+\item{trend}{a character, one of \code{equal}, \code{exponential}, \code{linear} and \code{quadratic}
 for the type of trend in squared singular values}
 
 \item{rho}{a numeric value between 0 and 1 for the amount of auto-correlation, i.e. correlation
