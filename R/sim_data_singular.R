@@ -18,7 +18,7 @@
 #' @param last a positive numeric within reasonable range for the difference
 #'    between the Kth eigenvalue and the (\eqn{K}+1)th, a very large difference
 #'    might not be possible if \eqn{K} is large.
-#' @param trend a character, one of \code{exponential}, \code{linear} and \code{quadratic}
+#' @param trend a character, one of \code{equal}, \code{exponential}, \code{linear} and \code{quadratic}
 #'   for the type of trend in squared singular values
 #' @param rho a numeric value between 0 and 1 for the amount of auto-correlation, i.e. correlation
 #'   between sequential observations or features.
@@ -72,10 +72,15 @@ get_data_singular <- function(N, K, M, sq_singular = NULL,
     }
 
     sigma2 <- as.numeric(sigma2)
-    null_lambda <- rep(sigma2, N)
     d2 <- rep(NA, K)
 
-    if (trend == "linear"){
+    if (trend == "equal"){
+      d2[K] <- last
+      remain_var <- N-sigma2*N
+      try(if(remain_var < 0) stop("not enough variance left for the first K-1 eigenvalues"));
+      d2[1:(K-1)] <- remain_var/K
+
+    } else  if (trend == "linear"){
       d2[K] <- last
       remain_var <- N-sigma2*N
       try(if(remain_var < 0) stop("not enough variance left for the first K-1 eigenvalues"));
@@ -101,32 +106,6 @@ get_data_singular <- function(N, K, M, sq_singular = NULL,
       d2 <- sort(d2, decreasing=T)
     }
 
-    if (dist == "norm"){
-
-      lambda <- sort(null_lambda + c(d2, rep(0, N - K)), decreasing = T)
-      singular <- d2
-      U <- pracma::randortho(N)[,1:K]
-      S <- U%*%diag(singular)%*%t(U) + diag(rep(sigma2, N))
-      X <- MASS::mvrnorm(M, mu = rep(0,N), Sigma = S)
-      sam_eigen  <- eigen(as.matrix(Matrix::nearPD(stats::cov(scale((X))))$mat))$val
-
-    }else{
-
-      errorT <- mvtnorm::rmvt(M, sigma = diag(sigma2, N), df = df)
-
-      error_AR <- errorT
-      error_AR[1, ] <- errorT[1, ]
-      for(m in 2:M){
-        error_AR[m, ] <- error_AR[(m - 1), ]*rho + errorT[m, ]
-      }
-      L <- MASS::mvrnorm(M, mu=rep(0, K), Sigma = diag(1, K), empirical=T) # M by N
-      A <- diag(d2) # K by K
-      W <- pracma::randortho(N) # N by N
-      X <- ((W[,1:K]%*%sqrt(A))%*%t(L)) + t(error_AR)
-      sam_eigen <- eigen(as.matrix(Matrix::nearPD(stats::cov(scale(t(X))))$mat))$val
-    }
-
-
   }else{
 
     if (!is.numeric(sq_singular) | length(sq_singular) != K ){
@@ -137,15 +116,45 @@ get_data_singular <- function(N, K, M, sq_singular = NULL,
       stop("Please ensure sum of the squared singular values is less than N,
            the total amount of standardized variance")
     }
-
     sigma2 <- 1 - sum(sq_singular)/N
+    d2 = sq_singular
+   }
 
-    U <- pracma::randortho(N)[, 1:K]
-    S <- U %*% diag(sq_singular) %*% t(U) + diag(rep(sigma2, N))
-    SS <- as.matrix(Matrix::nearPD(S)$mat)
-    X <- MASS::mvrnorm(M, mu = rep(0, N), Sigma = SS)
-    sam_eigen <- eigen(as.matrix(Matrix::nearPD(stats::cov(scale(X)))$mat))$val
-  }
+   K = length(d2)
+   U <- pracma::randortho(N)[,1:K]
+   L <- MASS::mvrnorm(M, mu=rep(0, K), Sigma = diag(1, K), empirical=T) # M by N
+   A <- diag(d2) # K by K
+
+   if (is.null(rho)){
+    rho = 0
+   } else if (rho > 1 | rho < 0){
+   stop("rho should be a value between 0 and 1")
+   }
+
+
+      if (dist == "norm"){
+
+      error <- MASS::mvrnorm(M, mu=rep(0, N),Sigma = diag(sigma2, N), empirical=T)
+      errorn_AR <- error
+      errorn_AR[1, ] <- error[1, ]
+      for(m in 2:M){
+        errorn_AR[m, ] <- errorn_AR[(m - 1), ]*rho + error[m, ]
+      }
+
+      X <- (U%*%sqrt(A))%*%t(L) + t(errorn_AR)
+
+      }else{
+
+        errorT <- mvtnorm::rmvt(M, sigma = diag(sigma2, N), df = df)
+        error_AR <- errorT
+        error_AR[1, ] <- errorT[1, ]
+        for(m in 2:M){
+          error_AR[m, ] <- error_AR[(m - 1), ]*rho + errorT[m, ]
+        }
+        X <- (U%*%sqrt(A))%*%t(L) + t(error_AR)
+      }
+
+      sam_eigen <- eigen(as.matrix(Matrix::nearPD(stats::cov(scale(t(X))))$mat))$val
 
 
     if (datamat == TRUE) {

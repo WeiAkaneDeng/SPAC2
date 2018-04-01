@@ -48,8 +48,9 @@
 #'
 #' @export
 #'
+
 pPPCA <- function(x = NULL, eigenvals = NULL, Tvotes = 5000,
-                  var_tol = 1e-5, tol = 1e-06, maxits = 500,
+                  var_tol = 0.01, tol = 1e-06, maxits = 500,
                   printComp = F, verbose = F) {
 
     if (is.null(x) && is.null(eigenvals)) {
@@ -98,39 +99,6 @@ pPPCA <- function(x = NULL, eigenvals = NULL, Tvotes = 5000,
                         na.rm = T)
     }
 
-    ln_penal1 <- function(delta, lk=T){
-
-    		lambda <- ifelse(lambda > 0, lambda, 0)
-  	  	n <- sum(lambda > 0)
-  	    sigma2 <- sapply(1:(n-1), function(x) sum(lambda[(x+1):n])/(n-x));
-  		kmax = floor(1/(1/n+delta/n))
-  		K_max <- max(2, min(floor(1/(1/n+delta/n/(1-max(sigma2[kmax], sigma2[n-1], na.rm=T)))), n-1))
-  		# control the maximum K is away from singular solutions of delta
-  		# (and since K_max searches contains K_max + 1)
-
-  	    l_original <- -0.5*(cumsum(log(lambda)[1:(n-1)]) + (n-(1:(n-1)))*log(sigma2) + n);
-
-  	    penal_loglk  <- l_original[1:K_max] - 0.5*((n-(1:K_max)*(1+delta))*log((n-(1:K_max))/(n-(1:K_max)*(1+delta))) - delta*(1:K_max)*(log(sigma2)[1:K_max]+1))
-
-  	    penal_loglk <- ifelse(is.finite(penal_loglk), penal_loglk, NA)
-
-  		K_choices <- ifelse(which.min(diff(penal_loglk)) > 1, which.min(diff(penal_loglk)) , sum(!is.na(penal_loglk)))
-
-  		## Jan 19, 2018 - fixed the difference here, if the min difference is greater than 1 then the point before the boundary is selected as the maximum choice.
-
-  	    # total explained variance by penalized model > 0
-  	    Kk <- ifelse(K_max - 1 > sum(diff(penal_loglk)>0, na.rm=T), which(unlist(sapply(2:K_max, function(xx) penal_loglk[xx] > penal_loglk[xx-1] & penal_loglk[xx] > penal_loglk[xx+1])))+1, which.max(penal_loglk))
-  	    Kk <- min(Kk, max(K_choices), which.max(penal_loglk[1:K_choices]), na.rm=T)
-
-  	# and if the remaining ones are monotone then take the largest one.
-  	# max print is when K exceeds n/(1+delta)
-  	  if (lk) {
-  	  	 return(penal_loglk)
-  	  	 }else{
-  	   	 return(Kk)
-  	   	}
-  	  }
-
    b = sapply(2:(N-1), function(f) (f-1)*log(sigma2[f-1]) - (f)*log(sigma2[f]));
    c = sapply(2:(N-1), function(d) log(lambda[d]/sigma2[d-1]) + (n-d)*log(sigma2[d]/sigma2[d-1]))
 
@@ -143,17 +111,12 @@ pPPCA <- function(x = NULL, eigenvals = NULL, Tvotes = 5000,
   delta_min = max(min(r1_K, na.rm=T), n*(1/(N-1)-1/N)*(1-sigma2[N-1]))
   delta_max = min(max(r1_K, na.rm=T), (1-1/N)*(1-sigma2[1])*n)
 
-  ## if no delta large enough for lk_max to be positive, we will use the min otherwise use the half of the delta bound by K_max.
-
   delta_choice = sort(c(delta_min, delta_min*exp(log(delta_max/delta_min)/Tvotes)^(1:(Tvotes-1))))
 
   ### step 1.2. determine p
 
-  new_result1 <- sapply(1:length(delta_choice), function(d) ln_penal1(delta= delta_choice[d], lk=F))
-  # Votes_LK <- tapply(delta_choice, new_result1, range);
-  # Del_range <- as.numeric(c(unlist(Votes_LK[length(Votes_LK)-2])[2],  unlist(Votes_LK[2])[1]));
+  new_result1 <- sapply(1:length(delta_choice), function(d) ppca_log_penal(delta= delta_choice[d], lambda = lambda, lk=F))
   votes <- table(new_result1)
-  #[delta_choice <  Del_range[2] & delta_choice > Del_range[1]]);
   nComp <- as.integer(names(sort(votes, decreasing=TRUE)[1]));
 
     if (printComp == F) {
@@ -235,3 +198,67 @@ pPPCA <- function(x = NULL, eigenvals = NULL, Tvotes = 5000,
         }
       }
 }
+
+
+
+#' Penalized Profile log-likeihood function
+#'
+#' The function returns the results of penalized profile
+#'    log-likelihood a vector of sample eigenvalues at a particular
+#'    penalty parameter value. The data matrix is assumed to follow the decomposition
+#'    \eqn{X = WL + \epsilon}, where rows of \eqn{X} are decomposed to a linear projection
+#'    in an orthogonal space plus error. The solution finds the
+#'    rank of \eqn{W}, which represents some hidden structure in
+#'    the data, such that \eqn{X-WL} have independent and
+#'    identically distributed components.
+#'
+#' @param eigenvals a numerical vector of sample eigenvalues
+#'
+#' @return an integer $K$ between 1 and $n$.
+#'
+#' @importFrom MASS mvrnorm
+#' @importFrom Matrix nearPD
+#' @importFrom mvtnorm dmvnorm
+#' @importFrom pracma orth
+#' @importFrom psych tr
+#'
+#' @author Wei Q. Deng, \email{deng@@utstat.toronto.edu}
+#'
+#' @references Tipping, M. E., and Bishop, C. M. (1999). Probabilistic principal component analysis.
+#'   \emph{Journal of the Royal Statistical Society: Series B (Statistical Methodology)},
+#'   \strong{61}(3), 611-622.
+#'
+#' @keywords probabilistic PCA, penalized probabilistic PCA, profile log-likelihood,
+#'    penalty tuning parameter, effective dimension
+#'
+#' @export
+#'
+
+ppca_log_penal <- function(delta, lambda, lk=T){
+
+    lambda <- ifelse(lambda > 0, lambda, 0)
+    n <- sum(lambda > 0)
+    sigma2 <- sapply(1:(n-1), function(x) sum(lambda[(x+1):n])/(n-x));
+    kmax = floor(1/(1/n+delta/n))
+
+    K_max <- max(2, min(floor(1/(1/n+delta/n/(1-max(sigma2[kmax], sigma2[n-1], na.rm=T)))), n-1))
+
+    l_original <- -0.5*(cumsum(log(lambda)[1:(n-1)]) + (n-(1:(n-1)))*log(sigma2) + n);
+
+    penal_loglk  <- l_original[1:K_max] - 0.5*((n-(1:K_max)*(1+delta))*log((n-(1:K_max))/(n-(1:K_max)*(1+delta))) - delta*(1:K_max)*(log(sigma2)[1:K_max]+1))
+
+    penal_loglk <- ifelse(is.finite(penal_loglk), penal_loglk, NA)
+
+    K_choices <- ifelse(which.min(diff(penal_loglk)) > 1, which.min(diff(penal_loglk)) , sum(!is.na(penal_loglk)))
+
+    Kk <- ifelse(K_max - 1 > sum(diff(penal_loglk)>0, na.rm=T),
+    which(unlist(sapply(2:K_max, function(xx) penal_loglk[xx] > penal_loglk[xx-1] & penal_loglk[xx] > penal_loglk[xx+1])))+1,
+    which.max(penal_loglk))
+    Kk <- min(Kk, max(K_choices), which.max(penal_loglk[1:K_choices]), na.rm=T)
+
+  if (lk) {
+     return(penal_loglk)
+     }else{
+     return(Kk)
+    }
+  }

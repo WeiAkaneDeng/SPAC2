@@ -27,8 +27,8 @@ BIC <- function(lambda, M) {
     lambda <- as.numeric(lambda)
     N <- sum(lambda > 0, na.rm = T)
     lambda <- ifelse(lambda > 0, lambda, 0)
-    which.min(-2 * ppcaLog(lambda=lambda, M=M) + (((1:(N -
-        1)) * N + 1 - (1:(N - 1)) * ((1:(N - 1)) - 1)/2) * log(M)))
+    which.min(-2 * ppcaLog(lambda=lambda, M=M) + (((1:(N - 1)) * N + 1
+      - (1:(N - 1)) * ((1:(N - 1)) - 1)/2) * log(M)))
 }
 
 
@@ -101,11 +101,10 @@ elbowEigen <- function(lambda,
   N <- sum(lambda > 0, na.rm = T)
 
   adjD <- which.min(c(lambda[-1]/lambda[-N], 1))
-  cumD <- which.max(cumsum(lambda)/(1:N)/((sum(lambda) - cumsum(lambda))/(N - 0:(N - 1))))
-
+  cumD <- which.max(cumsum(lambda)/(1:N)/((sum(lambda) - cumsum(lambda))/(N - 1:N)))
   varD <- which.max(sapply(1:N, function(x) stats::var(lambda[1:x])))
   cumlog <- which.min(log(cumsum(lambda))/(1:N - cumsum(log(lambda))))
-  logsigma2 <- which.min(log((N - cumsum(lambda)[-N])/(N - 1:(N - 1)) * (N - 1:(N - 1))))
+  logsigma2 <- which.min(log((N -cumsum(lambda[-N]))/(N-1:(N-1)))*(N-1:(N-1)))
 
   output <- data.frame(adjD, cumD, varD, cumlog, logsigma2)
   names(output) <- all_methods
@@ -192,7 +191,6 @@ Lawley.Test <- function(lambda, M) {
 #' @export
 #'
 ppcaCV <- function(k = NULL, x = NULL, fold = 5) {
-
 
 if (is.null(x)) {
   stop("Please provide a data matrix")

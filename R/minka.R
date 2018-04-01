@@ -70,7 +70,7 @@ minka2001 <- function(x = NULL, lambda=NULL, M = NULL, evidence = FALSE) {
     if (evidence) {
       return(out)
     } else {
-      return(which.max(out))
+      return(which.min(out))
     }
 }
 
@@ -151,6 +151,6 @@ minka2001_BIC <- function(x = NULL, lambda=NULL, M = NULL,evidence = FALSE) {
      if (evidence) {
       return(out)
     } else {
-      return(which.max(out))
+      return(which.min(out))
     }
 }
