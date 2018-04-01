@@ -134,7 +134,7 @@ get_data_singular <- function(N, K, M, sq_singular = NULL,
 
       if (dist == "norm"){
 
-      error <- MASS::mvrnorm(M, mu=rep(0, N),Sigma = diag(sigma2, N), empirical=T)
+      error <- MASS::mvrnorm(M, mu=rep(0, N),Sigma = diag(sigma2, N), empirical=ifelse(M>N, TRUE, FALSE))
       errorn_AR <- error
       errorn_AR[1, ] <- error[1, ]
       for(m in 2:M){
