@@ -5,7 +5,7 @@ This package implements a penalized profile log-likelihood criterion to estimate
 
 ###Quick Start###
 
-The current release is: version 0.9.3 See "release" tab.
+The current release is: version 0.9.5 See "release" tab.
 
 To install our R package "SPAC2", you can either run in R directly:
 
