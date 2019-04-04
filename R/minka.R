@@ -13,8 +13,8 @@
 #' \dontrun{
 #' X <- MASS::mvrnorm(1000, mu = rep(0,10), Sigma = diag(1,10))
 #' eigen_values <- eigen(as.matrix(Matrix::nearPD(stats::cov(scale(X)))$mat))$val
-#' minka2001(lambda = eigen_values, M = 100)
-#' minka2001(lambda = eigen_values, M = 5000)
+#' minka2001(lambda = eigen_values, p = 100)
+#' minka2001(lambda = eigen_values, p = 5000)
 #' }
 #'
 #' @keywords information criterion, profile log-likelihood, model selection, Laplace's method, Bayesian evidence
@@ -24,15 +24,14 @@
 #'
 #' @export
 #'
-minka2001 <- function(x = NULL, lambda=NULL, M = NULL, evidence = FALSE) {
+minka2001 <- function(x = NULL, lambda=NULL, p = NULL, evidence = FALSE) {
 
-  if (is.null(x) && is.null(lambda)) {
+  if (is.null(lambda)) {
     stop("Please provide either a data matrix or a numerical vector of sample eigenvalues")
   }
 
-  if (is.null(x)) {
 
-    if (is.null(M)) {
+   if (is.null(p)) {
       stop("Please provide the number of observations or features along with the sample eigenvalues")
     }
 
@@ -41,36 +40,33 @@ minka2001 <- function(x = NULL, lambda=NULL, M = NULL, evidence = FALSE) {
 
     sigma2 <- sapply(1:(n - 1), function(x) sum(lambda[(x + 1):n])/(n - x))
 
-  } else if (is.null(lambda)) {
 
-    X <- x[, !apply(x, 2, function(xx) sum(is.na(xx)) > 0)]
-    M <- ncol(X)
-    n <- nrow(X)
-    S <- stats::cov(scale(t(X)), use = "pairwise.complete")
-    SS <- as.matrix(Matrix::nearPD(S)$mat)
-    lambda = eigen(SS)$val
-    lambda = ifelse(lambda > 0, lambda, 0)
-  }
 
-    N <- sum(lambda > 0)
-    out <- NA
-    for (K in 1:N){
-    mm <- N * K - (K + 1) * K/2
-    sigma2 <- sum(lambda[(K + 1):N])/(N - K)
-    l_tild <- ifelse(lambda > sigma2, lambda, sigma2)
-    tiny_prod <- function(i) {
-        prod(1/l_tild[(i + 1):N] - 1/l_tild[i]) * prod(lambda[i] - lambda[(i + 1):N])
-    }
-    logA <- mm * log(M) + sum(log(sapply(1:K, tiny_prod)))
-    logrho_k <- 1/(N - K) * sum(log(lambda[(K + 1):N])) - 1/(N - K) * log(sum(lambda[(K +
-        1):N]))
-    out[K] <- (mm - K)/2 * log(2) - M * (N - K) * logrho_k - 0.5 * logA - K/2 * log(M) + sum(lgamma((N -
-        (1:K) + 1)/2)) - M/2 * sum(log(lambda[1:K])) + M * sum(log(lambda[(K + 1):N]))
-    }
+logDk <- function(k, lambda, p){
+
+	lambda <- ifelse(lambda > 1e-5, lambda, NA)
+	n <- length(lambda)
+	sigma2 <- sum(lambda[(k+1):n], na.rm=T)/(n-k)
+
+	small_sumN <- NA
+	for (ii in 1:k){
+		small_sumN[ii] <- sum(log(lambda[ii]-lambda[(ii+1):n]), na.rm=T) + (n-ii)*log(1/sigma2 - 1/lambda[ii])
+		}
+
+-p/2*sum(log(lambda[1:k])) - p*(n-k)/2*log(sigma2) - (sum(small_sumN) + log(p)*(2*n*k-k^2-k)/2 )/2 -k/2*log(p) + sum(lgamma((n-(1:k)+1)/2)) +  (2*n*k-k^2-3*k)/4*log(2) + 3*k/2*log(2)
+
+}
+
+ 
+ 	n <- length(lambda)
+	Minka <- sapply(1:(n-1), function(x) logDk(k=x, lambda= lambda, p = p)))
+
+
+
     if (evidence) {
-      return(out)
+      return(Minka)
     } else {
-      return(which.min(out))
+      return(which.max(Minka))
     }
 }
 
@@ -93,8 +89,8 @@ minka2001 <- function(x = NULL, lambda=NULL, M = NULL, evidence = FALSE) {
 #' \dontrun{
 #' X <- MASS::mvrnorm(1000, mu = rep(0,10), Sigma = diag(1,10))
 #' eigen_values <- eigen(as.matrix(Matrix::nearPD(stats::cov(scale((X))))$mat))$val
-#' minka2001_BIC(lambda = eigen_values, M = 1000)
-#' minka2001_BIC(lambda = eigen_values, M = 5000)
+#' minka2001_BIC(lambda = eigen_values, p = 1000)
+#' minka2001_BIC(lambda = eigen_values, p = 5000)
 #' }
 #'
 #' @keywords information criterion, profile log-likelihood, model selection, Laplace's method, Bayesian evidence
@@ -104,53 +100,38 @@ minka2001 <- function(x = NULL, lambda=NULL, M = NULL, evidence = FALSE) {
 #'
 #' @export
 
-minka2001_BIC <- function(x = NULL, lambda=NULL, M = NULL,evidence = FALSE) {
+minka2001_BIC <- function(lambda=NULL, p = NULL,evidence = FALSE) {
 
-  if (is.null(x) && is.null(lambda)) {
-    stop("Please provide either a data matrix or a numerical vector of sample eigenvalues")
+  if (is.null(lambda)) {
+    stop("Please provide  a numerical vector of sample eigenvalues")
   }
 
-  if (is.null(x)) {
+ BIClog <- function(lambda, p){
+ 	 	n <- length(lambda)
 
-    if (is.null(M)) {
-      stop("Please provide the number of observations or features along with the sample eigenvalues")
-    }
+ 	-2*profilelog(lambda= lambda, p = p) + log(p)*((1:(n-1))*n+(1:(n-1))/2-(1:(n-1))^2/2)/2
 
-    lambda <- ifelse(lambda > 0, lambda, 0)
-    n <- sum(lambda > 0)
+ }
 
-    sigma2 <- sapply(1:(n - 1), function(x) sum(lambda[(x + 1):n])/(n - x))
 
-  } else if (is.null(lambda)) {
-
-    X <- x[, !apply(x, 2, function(xx) sum(is.na(xx)) > 0)]
-    M <- ncol(X)
-    n <- nrow(X)
-    S <- stats::cov(scale(t(X)), use = "pairwise.complete")
-    SS <- as.matrix(Matrix::nearPD(S)$mat)
-    lambda = eigen(SS)$val
-    lambda = ifelse(lambda > 0, lambda, 0)
-  }
-
-    out <- NA
-    N <- sum(lambda > 0)
-    for (K in 1:N){
-    mm <- N * K - (K + 1) * K/2
-    sigma2 <- sum(lambda[(K + 1):N])/(N - K)
-    l_tild <- ifelse(lambda > sigma2, lambda, sigma2)
-    tiny_prod <- function(i) {
-        prod(1/l_tild[(i + 1):N] - 1/l_tild[i]) * prod(lambda[i] - lambda[(i + 1):N])
-    }
-    logA <- mm * log(M) + sum(log(sapply(1:K, tiny_prod)))
-    logrho_k <- 1/(N - K) * sum(log(lambda[(K + 1):N])) - 1/(N - K) * log(sum(lambda[(K +
-        1):N]))
-    out[K] <- (mm + K)/2 * log(M) - M * (N - K) * (logrho_k) - M/2 * sum(log(lambda[1:K])) +
-      M * sum(log(lambda[(K + 1):N]))
-    }
+	bic <- BIClog(lambda,p=p)
 
      if (evidence) {
-      return(out)
+      return(bic)
     } else {
-      return(which.min(out))
+      return(which.min(bic))
     }
 }
+
+
+
+profilelog <- function(lambda, p){
+
+ 	n <- length(lambda)
+
+
+ 	sapply(1:(n-1), function(k) -p/2*(sum(log(lambda)[1:k]) + (n-k)*log(sum(lambda[(k + 1):n])/(n - k)) + n*log(2*pi) + n))
+
+ }
+
+

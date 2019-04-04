@@ -1,37 +1,3 @@
-#' Bayesian Information Criterion for PPCA.
-#'
-#' The function returns the dimension that minimized the BIC based on the
-#'    profile log-likelihood while considering all possible dimensions.
-#'
-#' @param lambda a numeric vector of positive sample eigenvalues that sums to N
-#' @param M a positive integer for the number of observations or features``
-#' @return an integer K between 1 and N that minimizes the BIC.
-#'
-#' @examples
-#' \dontrun{
-#' library(MASS)
-#' X <- mvrnorm(5000, mu = rep(0,10), Sigma = diag(1,10))
-#' eigen_values <- eigen(as.matrix(Matrix::nearPD(stats::cov(scale((X))))$mat))$val
-#' BIC(lambda = eigen_values, M = 1000)
-#' BIC(lambda = eigen_values, M = 5000)
-#' }
-#' @keywords information criterion, profile log-likelihood, model selection,
-#'
-#' @references Schwarz, Gideon E. (1978), Estimating the dimension of a model,
-#'    \emph{Annals of Statistics}, \strong{6} (2): 461–464, MR 468014,
-#'    doi:10.1214/aos/1176344136
-#' @export
-
-BIC <- function(lambda, M) {
-
-    lambda <- as.numeric(lambda)
-    N <- sum(lambda > 0, na.rm = T)
-    lambda <- ifelse(lambda > 0, lambda, 0)
-    which.min(-2 * ppcaLog(lambda=lambda, M=M) + (((1:(N - 1)) * N + 1
-      - (1:(N - 1)) * ((1:(N - 1)) - 1)/2) * log(M)))
-}
-
-
 #' Akaike Information Criterion for PPCA.
 #'
 #' The function returns the dimension that minimized the AIC based on the
@@ -46,8 +12,8 @@ BIC <- function(lambda, M) {
 #' library(MASS)
 #' X <- mvrnorm(1000, mu = rep(0,10), Sigma = diag(1,10))
 #' eigen_values <- eigen(as.matrix(Matrix::nearPD(stats::cov(scale((X))))$mat))$val
-#' AIC(lambda = eigen_values, M = 1000)
-#' AIC(lambda = eigen_values, M = 5000)
+#' AIC(lambda = eigen_values, p = 1000)
+#' AIC(lambda = eigen_values, p = 5000)
 #' }
 #'
 #' @keywords information criterion, profile log-likelihood, model selection
@@ -57,14 +23,19 @@ BIC <- function(lambda, M) {
 #'    doi:10.1109/TAC.1974.1100705.
 #' @export
 
-AIC <- function(lambda, M) {
+AIC <- function(lambda, p} {
 
-    lambda <- as.numeric(lambda)
-    N <- sum(lambda > 0, na.rm = T)
-    lambda <- ifelse(lambda > 0, lambda, 0)
-    which.min((-2 * ppcaLog(lambda=lambda, M=M) + (((1:(N -
-        1)) * N + 1 - (1:(N - 1)) * ((1:(N - 1)) - 1)/2)) * 2))
-}
+    AIClog <- function(lambda, p){
+ 	
+ 		n <- length(lambda)
+ 		-2*profilelog(lambda= lambda, p = p) + 2*((1:(n-1))*n+(1:(n-1))/2-(1:(n-1))^2/2)/2
+
+ 	}
+ 
+ aic <- which.min(AIClog(lambda,p=p))
+ 
+	return(aic)
+ }
 
 #----------------------------------------------------------------------------------
 
@@ -101,9 +72,9 @@ elbowEigen <- function(lambda,
   N <- sum(lambda > 0, na.rm = T)
 
   adjD <- which.min(c(lambda[-1]/lambda[-N], 1))
-  cumD <- which.max(cumsum(lambda)/(1:N)/((sum(lambda) - cumsum(lambda))/(N - 1:N)))
-  varD <- which.max(sapply(1:N, function(x) stats::var(lambda[1:x])))
-  cumlog <- which.min(log(cumsum(lambda))/(1:N - cumsum(log(lambda))))
+  cumD <- which.max(cumsum(lambda)/(1:N)/((sum(lambda)-cumsum(lambda))/(N-1:N)))
+  varD <- which.max(sapply(1:N, function(x) var(lambda[1:x])))
+  cumlog <- which.min(log(cumsum(lambda))- cumsum(log(lambda)))
   logsigma2 <- which.min(log((N -cumsum(lambda[-N]))/(N-1:(N-1)))*(N-1:(N-1)))
 
   output <- data.frame(adjD, cumD, varD, cumlog, logsigma2)
@@ -118,16 +89,16 @@ elbowEigen <- function(lambda,
 #'   likelihood ratio test (LRT) derived by Lawley (1956).
 #'
 #'
-#' @param lambda a numeric vector of positive sample eigenvalues that sums to $N$
-#' @param M a positive integer for the number of observations or features``
-#' @return an integer $K$ between 1 and $N$ that minimizes the LRT $p$-value.
+#' @param lambda a numeric vector of positive sample eigenvalues that sums to $n$
+#' @param p a positive integer for the number of observations or features``
+#' @return an integer $K$ between 1 and $n$ that minimizes the LRT $p$-value.
 #'
 #' @examples
 #' \dontrun{
 #' library(MASS)
 #' X <- mvrnorm(1000, mu = rep(0,10), Sigma = diag(1,10))
 #' eigen_values <- eigen(as.matrix(Matrix::nearPD(stats::cov(scale(t(X))))$mat))$val
-#' Lawley.Test(lambda = eigen_values, M = 1000)
+#' Lawley.Test(lambda = eigen_values, p = 1000)
 #' }
 #'
 #' @author Wei Q. Deng, \email{deng@@utstat.toronto.edu}
@@ -139,17 +110,16 @@ elbowEigen <- function(lambda,
 #'
 #' @export
 #'
-Lawley.Test <- function(lambda, M) {
+Lawley.Test <- function(lambda, p) {
 
   lambda <- as.numeric(lambda)
   N <- sum(lambda > 0, na.rm = T)
-  f = M - 1
   pvalue <- sapply(1:N, function(x) {
-    p <- N - x
-    logQ = sum(log(lambda[x:N])) - p*log(sum(lambda[x:N]/p))
-    constant <- -(f - x - 1/6 * (2*p + 1 + 2/p))
-    teststat <- constant * logQ
-    stats::pchisq(teststat, p * (p + 1)/2 - 1, lower.tail = F)
+  	pp <- length(lambda) - x
+  	l <- mean(lambda[x:N])
+  	c <- pp-1/6*(2*pp+1+2/pp)+l^2*sum(1/(lambda[1:x]-l)^2)
+  	teststat <- c*(pp*log(sum(lambda[x:N]/pp)) - sum(log(lambda[x:N])))
+  	pchisq(teststat, pp*(pp+1)/2-1)
   })
   which.min(pvalue)
   }

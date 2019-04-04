@@ -2,9 +2,8 @@
 #'
 #' The function returns the choice for PCA as a by-product of the bias-corrected residual variance estimate.
 #'
-#' @param x a data matrix with the number of rows to be reduced; only complete columns are used.
-#' @param lambda a numeric vector of sample eigenvalues of the covariance matrix of t(\code{x})
-#' @param M if \code{x} were not supplied, \code{M} should be given as the number of columns of \code{x}.
+#' @param lambda a numeric vector of sample eigenvalues of length $n$.
+#' @param p the number of observations to calculate the sample eigenvalues.
 #' @param constant a small prefixed constant and set to the recommended value of 0.05. See Passemier et al., (2017) for details.
 #'
 #' @return an integer K
@@ -13,8 +12,8 @@
 #' \dontrun{
 #' X <- MASS::mvrnorm(1000, mu = rep(0,10), Sigma = diag(1,10))
 #' eigen_values <- eigen(as.matrix(Matrix::nearPD(stats::cov(scale(X)))$mat))$val
-#' passemier(lambda = eigen_values, M = 100)
-#' passemier(lambda = eigen_values, M = 5000)
+#' passemier(lambda = eigen_values, p = 100)
+#' passemier(lambda = eigen_values, p = 5000)
 #' }
 #'
 #' @keywords information criterion, profile log-likelihood, model selection, Laplace's method, Bayesian evidence
@@ -25,50 +24,27 @@
 #'
 #' @export
 #'
-passemier <- function(x = NULL, lambda=NULL, M = NULL, constant = 0.05) {
+passemier <- function(lambda=NULL, p = NULL, constant = 0.05) {
 
-  if (is.null(x) && is.null(lambda)) {
-    stop("Please provide either a data matrix or a numerical vector of sample eigenvalues")
+  if (is.null(lambda)) {
+    stop("Please provide a numerical vector of sample eigenvalues")
   }
 
-  if (is.null(x)) {
-
-    if (is.null(M)) {
-      stop("Please provide the number of observations or features along with the sample eigenvalues")
-    }
-
-    lambda <- ifelse(lambda > 0, lambda, 0)
-    n <- sum(lambda > 0)
-
-    sigma2 <- sapply(1:(n - 1), function(x) sum(lambda[(x + 1):n])/(n - x))
-
-  } else if (is.null(lambda)) {
-
-    X <- x[, !apply(x, 2, function(xx) sum(is.na(xx)) > 0)]
-    M <- ncol(X)
-    n <- nrow(X)
-    S <- stats::cov(scale(t(X)), use = "pairwise.complete")
-    SS <- as.matrix(Matrix::nearPD(S)$mat)
-    lambda = eigen(SS)$val
-    lambda = ifelse(lambda > 0, lambda, 0)
-  }
-
-    p <- sum(lambda > 0)
-    out <- NA
-    for (K in 1:(p-1)){
-		sigma2 <- sum(lambda[(K+1):p])/(p-K)
-		alpha <- lambda[1:K]
-		cn <- p/(M-1)
-
-		b_sigma2 <- sqrt(cn/2)*(K + sigma2*sum(1/alpha[1:K]))
-		sigma2_star <- sigma2 + b_sigma2/(p-K)*sigma2*sqrt(2*cn)
-		sigma2_star_m <- sigma2 + b_sigma2*sigma2*sqrt(2*cn)
-		# max is p-1
-
-		gNT <- (sqrt(cn)+2*sqrt(cn))*(1+M/p^(1+constant))/p
-		PC_star <- sigma2_star + K*sigma2_star_m*gNT
-		out[K] <- PC_star
-		}
-
-      return(min(which.min(out), p-1))
+	PC_star <- function(k, p, lambda, delta = 0.05){
+	
+	n <- length(lambda)
+	kmax <- round(n/2)
+	sigma2hat <- function(xx) sum(lambda[(xx+1):n])/(n-xx)
+	c_n <- n/p
+	b_sigma2 <- function(xx) sqrt(c_n/2)*(xx+ sigma2hat(xx)*sum(1/lambda[1:xx]))
+	sigma2hat_star <- function(xx) sigma2hat(xx) + b_sigma2(xx)/(n-xx)*sigma2hat(xx)*sqrt(c_n*2)
+		
+	sigma2hat_star(k) + sigma2hat_star(kmax)*k*(c_n+2*sqrt(c_n))*(1+p/n^(1+delta))/n
 }
+
+	n <- length(lambda)
+	which.min(sapply(1:(n-1), function(x) PC_star(k=x, lambda=lambda, p = p)))
+}
+
+
+
