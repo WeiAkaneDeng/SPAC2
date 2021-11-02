@@ -40,15 +40,15 @@
 #' ppcaLog(x = t(X), param = list(W, sigma2)) # supply a data matrix and MLEs
 #' ppcaLog(lambda = eigen_values, M = 1000) # supply the sample eigenvalues
 #' }
-#' @author Wei Q. Deng, \email{utstat.toronto.edu}
+#' @author Wei Q. Deng, \email{dengwq@mcmaster.ca}
 #'
-#' @references Tipping, M. E., and Bishop, C. M. (1999). Probabilistic principal component analysis.
-#'    \emph{Journal of the Royal Statistical Society: Series B (Statistical Methodology)}, \strong{61}(3), 611-622.
+#' @references Tipping, M. E., and Bishop, C. M. (1999). Probabilistic principal component analysis. **Journal of the Royal Statistical Society: Series B (Statistical Methodology)**, *61*(3), 611-622. <doi:10.1111/1467-9868.00196>
 #'
 #' @keywords probabilistic PCA, Expectation and Maximization, Maximum Likelihood Estimates, profile log-likelihood
 #'
-#' @export
+#' @export ppcaLog
 #'
+
 ppcaLog <- function(x = NULL, lambda = NULL, M = NULL, param = NULL, EM = FALSE) {
 
   if (is.null(x) && is.null(lambda)) {
@@ -102,3 +102,17 @@ ppcaLog <- function(x = NULL, lambda = NULL, M = NULL, param = NULL, EM = FALSE)
   }
   return(loglk)
 }
+
+
+
+loglk <- function(lam, n, tau=1e-5){
+  nn <- sum(lam > tau)
+  sigma2_val <- sapply(1:(nn - 1), function(x) sum(lam[(x + 1):nn])/(n - x))
+  loglk_original <- -0.5*(cumsum(log(lam[1:(nn-1)])) + (n-(1:(nn-1)))*log(sigma2_val[1:(nn-1)]) + n + n*log(2));
+  # only from k = 1 to k = n-2 (standardized)
+  loglk_constructed <- c(-0.5*(n+n*log(2)), loglk_original, -0.5*(sum(log(lam[lam > tau])) + n + n*log(2)))
+  #plot(loglk_constructed)
+  # from k = 0 to k = n-1
+  return(list(loglk_original, loglk_constructed))
+}
+

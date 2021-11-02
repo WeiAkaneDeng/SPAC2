@@ -33,9 +33,7 @@ ppcaMLE(x = t(X), nComp = 5)
 
 }
 \references{
-Tipping, M. E., and Bishop, C. M. (1999). Probabilistic principal component analysis.
-   \emph{Journal of the Royal Statistical Society: Series B (Statistical Methodology)},
-   \strong{61}(3), 611-622.
+Tipping, M. E., and Bishop, C. M. (1999). Probabilistic principal component analysis. **Journal of the Royal Statistical Society: Series B (Statistical Methodology)**, *61*(3), 611-622. <doi:10.1111/1467-9868.00196>
 }
 \seealso{
 \url{https://github.com/m-clark/Miscellaneous-R-Code/blob/master/ModelFitting/EM\%20Examples/EM\%20algorithm\%20for\%20ppca.R}

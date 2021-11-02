@@ -43,11 +43,11 @@
 #' get_data_singular(N = 200, K = 5, M = 1000, sigma2 = 0.8, last= 0.1, trend = "exponential",
 #'    rho = 0.2, df = 5, dist = "t")
 #' }
-#' @author Wei Q. Deng, \email{deng@utstat.toronto.edu}
 #'
 #'
-#' @export
+#' @export get_data_singular
 #'
+
 get_data_singular <- function(N, K, M, sq_singular = NULL,
                               sigma2 = NULL, last= NULL, trend = NULL,
                               rho = NULL, df = NULL, dist = "norm",
@@ -161,8 +161,8 @@ get_data_singular <- function(N, K, M, sq_singular = NULL,
 	      X <- LeftTerm + errorn_AR
 	      #X <- MASS::mvrnorm(M, mu=rep(0, N),Sigma = diag(c(d2+sigma2, rep(sigma2, N-K))))
 
-	      sam_eigen <- eigen(cov(X))$val
-	      
+	      sam_eigen <- eigen(stats::cov(X))$val
+
     if (datamat == TRUE) {
         return(list(X, sam_eigen))
     } else {

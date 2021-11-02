@@ -27,15 +27,10 @@ library(MASS)
 X <- mvrnorm(1000, mu = rep(0,50), Sigma = diag(1,50))
 ppcaCV(k = 5, x = X, fold = 5) # 5-fold cross-validation.
 }
-
+#'
 }
 \references{
-Tipping, M. E., and Bishop, C. M. (1999). Probabilistic principal component analysis.
-   \emph{Journal of the Royal Statistical Society: Series B (Statistical Methodology)},
-   \strong{61}(3), 611-622.
-}
-\author{
-Wei Q. Deng, \email{deng@utstat.toronto.edu}
+Tipping, M. E., and Bishop, C. M. (1999). Probabilistic principal component analysis. **Journal of the Royal Statistical Society: Series B (Statistical Methodology)**, *61*(3), 611-622. <doi:10.1111/1467-9868.00196>
 }
 \keyword{PCA,}
 \keyword{cross}

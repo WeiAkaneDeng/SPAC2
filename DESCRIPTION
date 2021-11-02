@@ -1,18 +1,11 @@
 Package: SPAC2
 Type: Package
-Title: Statistical and Probabilistic Algorithm for Classification and Clustering
-Version: 0.9.3
-Author: Wei Q. Deng, Radu R. Craiu
-Maintainer: Wei Q. Deng <deng@utstat.toronto.edu>
-Description: This package provides a statistical algorithm that implements a
-   penalized profile log-likelihood criterion to estimate the number of effective
-   dimensions of a data matrix. The data structure is modeled similarly as in
-   Probabilistic Principal Components Analysis (PPCA). The package also provides
-   various functions to simulate either the sample eigenvalue or the data matrix
-   under specific covariance structures and possibly with violation to normality
-   or independence assumption. The effective dimension or the number of principal
-   components uncovered using our approach can be then used as inputs in subsequent
-   analysis such as clustering or classification.
+Title: Statistical and Probabilistic Algorithms for Classification and Clustering
+Version: 0.9.9
+Authors@R: c(
+    person("Wei Q.", "Deng", email = "dengwq@mcmaster.ca", role = c("cre","aut")),
+    person("Radu V.", "Craiu", email = "radu.craiu@utoronto.ca", role = "aut"))
+Description: Implementing a series of statistical procedures for large-scale data, including a penalized profile log-likelihood criterion to estimate the number of effective rank of a data matrix, as well as alternative approaches; a measure of multi-collinearity that can summarize both the overall and individual-level burden of correlation; and an unbiased high-dimensional variance estimator. The package also provides various functions to simulate either the sample eigenvalue or the data matrix under specific covariance structures and possibly with violation to normality or independence assumption.
 License: GPL-2
 Encoding: UTF-8
 Imports: MASS,
@@ -20,8 +13,9 @@ Imports: MASS,
     mvtnorm,
     pracma,
     psych,
+    car,
 Depends: R (>= 3.1.0)
 Recommends: R (>= 3.4.1)
 Suggests: cluster, mclust
 LazyData: true
-RoxygenNote: 6.0.1
+RoxygenNote: 7.1.1

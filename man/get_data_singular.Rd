@@ -4,8 +4,19 @@
 \alias{get_data_singular}
 \title{Simulate Data from Eigenvalue Structure}
 \usage{
-get_data_singular(N, K, M, sq_singular = NULL, sigma2 = NULL, last = NULL,
-  trend = NULL, rho = NULL, df = NULL, dist = "norm", datamat = TRUE)
+get_data_singular(
+  N,
+  K,
+  M,
+  sq_singular = NULL,
+  sigma2 = NULL,
+  last = NULL,
+  trend = NULL,
+  rho = NULL,
+  df = NULL,
+  dist = "norm",
+  datamat = TRUE
+)
 }
 \arguments{
 \item{N}{the full dimension of the data}
@@ -58,7 +69,6 @@ get_data_singular(N = 200, K = 5, M = 1000, sigma2 = 0.2, last= 0.1, trend = "ex
 get_data_singular(N = 200, K = 5, M = 1000, sigma2 = 0.8, last= 0.1, trend = "exponential",
    rho = 0.2, df = 5, dist = "t")
 }
-}
-\author{
-Wei Q. Deng, \email{deng@utstat.toronto.edu}
+
+
 }

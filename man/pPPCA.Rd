@@ -4,26 +4,27 @@
 \alias{pPPCA}
 \title{Penalized Probabilistic PCA}
 \usage{
-pPPCA(x = NULL, eigenvals = NULL, Tvotes = 5000, var_tol = 0.01,
-  tol = 1e-06, maxits = 500, printComp = F, verbose = F)
+pPPCA(
+  lambda,
+  Tvotes = 1000,
+  verbose = FALSE,
+  penalty = 1,
+  tau = 0.001,
+  beta = NULL
+)
 }
 \arguments{
-\item{x}{a data matrix with the number of rows to be reduced; only complete columns are used.}
-
-\item{eigenvals}{a numerical vector of sample eigenvalues}
+\item{lambda}{a numerical vector of sample eigenvalues}
 
 \item{Tvotes}{the number of possible tuning parameter values to be searched}
 
-\item{var_tol}{the tolerance on the empirical error variance to be greater than 0,
-the default proportion is set to 0.01}
-
-\item{tol}{a tolerance level for the EM algorithm to terminate computations.}
-
-\item{maxits}{the maximum number of iterations in EM to find the principal components}
-
-\item{printComp}{a logical to indicate whether only the principal components should be printed}
-
 \item{verbose}{a logical to indicate whether the details of the penalized voting results should be shown}
+
+\item{penalty}{an integer indicating the type of penalty function to use. The default option is 1, which corresponds to the model in Deng and Craiu (2021).}
+
+\item{tau}{a tolerance threshold for the smallest eigenvalue, the default value is 0.001.}
+
+\item{beta}{a numeric between 0 and 1 indicating the weight towards penalty function 1 or 2.}
 }
 \value{
 an integer $K$ between 1 and $n$.
@@ -44,18 +45,10 @@ library(MASS)
 normdata <- mvrnorm(1000, mu = rep(0,50), Sigma = diag(1,50))
 eigen_values <- eigen(as.matrix(Matrix::nearPD(stats::cov(scale(normdata)))$mat))$val
 
-pPPCA(x = t(normdata)) # supply the data matrix
-pPPCA(eigenvals = eigen_values) # supply the sample eigenvalues
+pPPCA(lambda = lambda) # supply the sample eigenvalues
 }
 
-}
-\references{
-Tipping, M. E., and Bishop, C. M. (1999). Probabilistic principal component analysis.
-  \emph{Journal of the Royal Statistical Society: Series B (Statistical Methodology)},
-  \strong{61}(3), 611-622.
-}
-\author{
-Wei Q. Deng, \email{deng@utstat.toronto.edu}
+
 }
 \keyword{PCA,}
 \keyword{dimension}

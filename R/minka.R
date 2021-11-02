@@ -1,137 +1,161 @@
-#' Automatic Choice of dimensionality for PCA using Laplace's method
+#' Automatic Choice of Dimensionality for PCA using Bayesian Posterior
 #'
 #' The function returns the choice dimension for PCA under the PPCA setup using Laplace approximation.
 #'
-#' @param x a data matrix with the number of rows to be reduced; only complete columns are used.
-#' @param lambda a numeric vector of sample eigenvalues of the covariance matrix of t(\code{x})
-#' @param M if \code{x} were not supplied, \code{M} should be given as the number of columns of \code{x}.
-#' @param evidence a logical specifying whether the BIC evidence or
+#' @param lambda a numeric vector of sample eigenvalues of the covariance matrix of \code{X} of dimension n by M.
+#' @param M  the number of columns of \code{X}.
+#' @param tau  a tolerance threshold for the smallest eigenvalue, the default value is 0.001.
+#' @param BIC a logical indicating whether the Laplace's method or the BIC approximation should be used.
+#' @param verbose a logical specifying whether the posterior evidence or
 #'     the integer that minimized the evidence should be returned
-#' @return an integer K between 1 and N that maximizes the posterior BIC approximated by Laplace's method.
+#' @return an integer K between 1 and n that maximizes the posterior evidence  by Laplace's method or BIC approximation.
 #'
 #' @examples
 #' \dontrun{
 #' X <- MASS::mvrnorm(1000, mu = rep(0,10), Sigma = diag(1,10))
 #' eigen_values <- eigen(as.matrix(Matrix::nearPD(stats::cov(scale(X)))$mat))$val
-#' minka2001(lambda = eigen_values, p = 100)
-#' minka2001(lambda = eigen_values, p = 5000)
+#' minka2001(lambda = eigen_values, M = 100, BIC=TRUE)
+#' minka2001(lambda = eigen_values, M = 100, BIC=FALSE)
+#' minka2001(lambda = eigen_values, M = 5000)
 #' }
 #'
 #' @keywords information criterion, profile log-likelihood, model selection, Laplace's method, Bayesian evidence
 #'
-#' @references Minka, T. P. (2000). Automatic choice of dimensionality for PCA.
-#' In \emph{NIPS} (Vol. \strong{13}, pp. 598-604).
+#' @references Minka, T. (2000). Automatic choice of dimensionality for PCA. **Advances in neural information processing systems**, *13*, 598-604. [http://dblp.uni-trier.de/db/conf/nips/nips2000.html#Minka00]
 #'
-#' @export
+#' @export minka2001
 #'
-minka2001 <- function(x = NULL, lambda=NULL, p = NULL, evidence = FALSE) {
+
+minka2001 <- function(lambda, M, verbose=FALSE, tau=0.001, BIC=FALSE) {
 
   if (is.null(lambda)) {
     stop("Please provide either a data matrix or a numerical vector of sample eigenvalues")
   }
 
-
-   if (is.null(p)) {
+   if (is.null(M)) {
       stop("Please provide the number of observations or features along with the sample eigenvalues")
     }
+  n <- length(lambda > tau)
 
-    lambda <- ifelse(lambda > 0, lambda, 0)
-    n <- sum(lambda > 0)
+ 	kmax <- min(c(n-1, M-2))
+	lambda <- lambda[lambda > ifelse(is.null(tau), 1e-3, tau)]
+	n = length(lambda)
 
-    sigma2 <- sapply(1:(n - 1), function(x) sum(lambda[(x + 1):n])/(n - x))
+	if (!BIC) {
+
+	logediff = NA;
+	for (i in 1:(length(lambda)-1)){
+	  j = (i+1):length(lambda);
+	  logediff[i] = sum(log(lambda[i] - lambda[j])) + (n-length(lambda))*log(lambda[i]);
+	}
+	cumsum_logediff = cumsum(logediff);
+
+# exact match - safe
+#% logediff(i) = sum_{j>i} log(e(i) - e(j))
+#logediff = zeros(1,length(e));
+#for i = 1:(length(e)-1)
+#  j = (i+1):length(e);
+#  logediff(i) = sum(log(e(i) - e(j))) + (d-length(e))*log(e(i));
+#end
+#cumsum_logediff = cumsum(logediff);
+
+	n1 = M-1;
+	ehat = (lambda)*M/n1;
+	inve = 1/lambda;
+	invediff = matrix(rep(inve, length(lambda)), ncol=length(lambda)) - matrix(rep(inve, length(lambda)),nrow=length(lambda), byrow=T)
+	invediff[invediff <=0 ] = 1;
+	invediff = log(invediff);
+
+	cumsum_invediff = apply(invediff, 2, cumsum);
+	row_invediff = t(apply(cumsum_invediff, 1, cumsum));
+
+# exact match
+#invediff = repmat(inve,1,length(e)) - repmat(inve',length(e),1);
+#invediff(invediff <= 0) = 1;
+#invediff = log(invediff);
+#% cumsum_invediff(i,j) = sum_{t=(j+1):i} log(inve(t) - inve(j))
+#cumsum_invediff = cumsum(invediff,1);
+#% row_invediff(i) = sum_{j=1:(i-1)} sum_{t=(j+1):i} log(inve(t) - inve(j))
+#row_invediff = cumsum(cumsum_invediff, 2);
+#%row_invediff = row_sum(cumsum_invediff);
+#% row_invediff(k) = sum_{i=1:(k-1)} sum_{j=(i+1):k} log(inve(j) - inve(i))
 
 
+	loge = log(ehat);
+	cumsum_loge = cumsum(loge);
+	cumsum_e = cumsum(ehat);
 
-logDk <- function(k, lambda, p){
+	dn = length(lambda);
+	kmax = length(lambda)-1;
+	ks = 1:kmax;
+	z = log(2) + (n-ks+1)/2*log(pi) - lgamma((n-ks+1)/2);
+	cumsum_z = cumsum(z);
 
-	lambda <- ifelse(lambda > 1e-5, lambda, NA)
-	n <- length(lambda)
-	sigma2 <- sum(lambda[(k+1):n], na.rm=T)/(n-k)
+# exact match - safe
+#dn = length(e);
+#kmax = length(e)-1;
+#%dn = d;
+#%kmax = min([kmax 15]);
+#ks = 1:kmax;
+#% the normalizing constant for the prior (from James)
+#% sum(z(1:k)) is -log(p(U))
+#z = log(2) + (d-ks+1)/2*log(pi) - gammaln((d-ks+1)/2);
+#cumsum_z = cumsum(z);
 
-	small_sumN <- NA
-	for (ii in 1:k){
-		small_sumN[ii] <- sum(log(lambda[ii]-lambda[(ii+1):n]), na.rm=T) + (n-ii)*log(1/sigma2 - 1/lambda[ii])
-		}
 
--p/2*sum(log(lambda[1:k])) - p*(n-k)/2*log(sigma2) - (sum(small_sumN) + log(p)*(2*n*k-k^2-k)/2 )/2 -k/2*log(p) + sum(lgamma((n-(1:k)+1)/2)) +  (2*n*k-k^2-3*k)/4*log(2) + 3*k/2*log(2)
+	prb <- NA
+
+	for (i in 1:length(ks)){
+	  k = i;
+	  v = (cumsum_e[length(cumsum_e)] - cumsum_e[k])/(n-k);
+	  prb[i] = -n1/2*cumsum_loge[k] + (-n1*(n-k)/2)*log(v);
+	  prb[i] = prb[i] - cumsum_z[k] - k/2*log(n1);
+	  #% compute h = logdet(A_Z)
+	  h = row_invediff[k] + cumsum_logediff[k];
+	  #% lambda_hat(i)=1/v for i>k
+	  h = h + (n-k)*sum(log(1/v - inve[1:k]));
+	  mm = n*k-k*(k+1)/2;
+	  h = h + mm*log(M);
+	  prb[i] = prb[i] + (mm+k)/2*log(2*pi) - h/2;
+	  #% missing terms added August 21 2008
+	  prb[i] = prb[i] + 1.5*k*log(2);
+	  prb[i] = prb[i] - 0.5*log(n-k);
+	}
+
+}	else {
+
+	    prb <- NA
+
+	    for (i in 1:kmax){
+
+	      k = i
+	      e1 = lambda[1:k];
+	      e2 = lambda[(k+1):length(lambda)];
+	      v = sum(e2)/(n-k)
+	      likelihood <- -sum(log(e1))  - (n-k)*log(v)
+	      mm = n*k - k*(k+1)/2
+	      params = mm + k + n + 1
+	      prb[i] = likelihood*M - params*log(M)
+	    }
+
+	}
+
+
+	if (verbose) {
+	return(prb)
+	} else {
+	return(which.max(prb))
+	}
+
+
 
 }
 
- 
- 	n <- length(lambda)
-	Minka <- sapply(1:(n-1), function(x) logDk(k=x, lambda= lambda, p = p)))
-
-
-
-    if (evidence) {
-      return(Minka)
-    } else {
-      return(which.max(Minka))
-    }
-}
 
 
 
 
 
-#' Automatic Choice of dimensionality for PCA using BIC approximation.
-#'
-#' The function returns the choice dimension for PCA under the PPCA setup using a simplification of Laplace's method.
-#'
-#' @param x a data matrix with the number of rows to be reduced; only complete columns are used.
-#' @param lambda a numeric vector of sample eigenvalues of the covariance matrix of t(\code{x})
-#' @param M if \code{x} were not supplied, \code{M} should be given as the number of columns of \code{x}.
-#' @param evidence a logical specifying whether the BIC evidence or
-#'     the integer that minimized the evidence should be returned
-#' @return an integer K between 1 and N that maximizes the approximated marginal log-likelihood.
-#'
-#' @examples
-#' \dontrun{
-#' X <- MASS::mvrnorm(1000, mu = rep(0,10), Sigma = diag(1,10))
-#' eigen_values <- eigen(as.matrix(Matrix::nearPD(stats::cov(scale((X))))$mat))$val
-#' minka2001_BIC(lambda = eigen_values, p = 1000)
-#' minka2001_BIC(lambda = eigen_values, p = 5000)
-#' }
-#'
-#' @keywords information criterion, profile log-likelihood, model selection, Laplace's method, Bayesian evidence
-#'
-#' @references Minka, T. P. (2000). Automatic choice of dimensionality for PCA.
-#' In \emph{NIPS} (Vol. \strong{13}, pp. 598-604).
-#'
-#' @export
 
-minka2001_BIC <- function(lambda=NULL, p = NULL,evidence = FALSE) {
-
-  if (is.null(lambda)) {
-    stop("Please provide  a numerical vector of sample eigenvalues")
-  }
-
- BIClog <- function(lambda, p){
- 	 	n <- length(lambda)
-
- 	-2*profilelog(lambda= lambda, p = p) + log(p)*((1:(n-1))*n+(1:(n-1))/2-(1:(n-1))^2/2)/2
-
- }
-
-
-	bic <- BIClog(lambda,p=p)
-
-     if (evidence) {
-      return(bic)
-    } else {
-      return(which.min(bic))
-    }
-}
-
-
-
-profilelog <- function(lambda, p){
-
- 	n <- length(lambda)
-
-
- 	sapply(1:(n-1), function(k) -p/2*(sum(log(lambda)[1:k]) + (n-k)*log(sum(lambda[(k + 1):n])/(n - k)) + n*log(2*pi) + n))
-
- }
 
 

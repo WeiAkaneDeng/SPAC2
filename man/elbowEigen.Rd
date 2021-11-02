@@ -7,12 +7,12 @@
 elbowEigen(lambda, methods = c("adjD", "cumD", "varD", "cumlog", "logsigma2"))
 }
 \arguments{
-\item{lambda}{a numeric vector of positive sample eigenvalues that sums to $N$.}
+\item{lambda}{a numeric vector of positive sample eigenvalues of length n}
 
 \item{methods}{a character vector of possible methods to detect an elbow in sample eigenvalues.}
 }
 \value{
-an integer $K$ between 1 and $N$.
+an integer $K$ between 1 and $n$.
 }
 \description{
 The function returns the dimension that is selected based on various methods that
@@ -27,9 +27,7 @@ elbowEigen(lambda = eigen_values)
 elbowEigen(lambda = eigen_values)
 }
 
-}
-\author{
-Wei Q. Deng, \email{deng@utstat.toronto.edu}
+
 }
 \keyword{approach}
 \keyword{eigenvalues,}

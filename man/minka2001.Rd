@@ -2,22 +2,24 @@
 % Please edit documentation in R/minka.R
 \name{minka2001}
 \alias{minka2001}
-\title{Automatic Choice of dimensionality for PCA using Laplace's method}
+\title{Automatic Choice of Dimensionality for PCA using Bayesian Posterior}
 \usage{
-minka2001(x = NULL, lambda = NULL, M = NULL, evidence = FALSE)
+minka2001(lambda, M, verbose = FALSE, tau = 0.001, BIC = FALSE)
 }
 \arguments{
-\item{x}{a data matrix with the number of rows to be reduced; only complete columns are used.}
+\item{lambda}{a numeric vector of sample eigenvalues of the covariance matrix of \code{X} of dimension n by M.}
 
-\item{lambda}{a numeric vector of sample eigenvalues of the covariance matrix of t(\code{x})}
+\item{M}{the number of columns of \code{X}.}
 
-\item{M}{if \code{x} were not supplied, \code{M} should be given as the number of columns of \code{x}.}
-
-\item{evidence}{a logical specifying whether the BIC evidence or
+\item{verbose}{a logical specifying whether the posterior evidence or
 the integer that minimized the evidence should be returned}
+
+\item{tau}{a tolerance threshold for the smallest eigenvalue, the default value is 0.001.}
+
+\item{BIC}{a logical indicating whether the Laplace's method or the BIC approximation should be used.}
 }
 \value{
-an integer K between 1 and N that maximizes the posterior BIC approximated by Laplace's method.
+an integer K between 1 and n that maximizes the posterior evidence  by Laplace's method or BIC approximation.
 }
 \description{
 The function returns the choice dimension for PCA under the PPCA setup using Laplace approximation.
@@ -26,14 +28,14 @@ The function returns the choice dimension for PCA under the PPCA setup using Lap
 \dontrun{
 X <- MASS::mvrnorm(1000, mu = rep(0,10), Sigma = diag(1,10))
 eigen_values <- eigen(as.matrix(Matrix::nearPD(stats::cov(scale(X)))$mat))$val
-minka2001(lambda = eigen_values, M = 100)
+minka2001(lambda = eigen_values, M = 100, BIC=TRUE)
+minka2001(lambda = eigen_values, M = 100, BIC=FALSE)
 minka2001(lambda = eigen_values, M = 5000)
 }
 
 }
 \references{
-Minka, T. P. (2000). Automatic choice of dimensionality for PCA.
-In \emph{NIPS} (Vol. \strong{13}, pp. 598-604).
+Minka, T. (2000). Automatic choice of dimensionality for PCA. **Advances in neural information processing systems**, *13*, 598-604. [http://dblp.uni-trier.de/db/conf/nips/nips2000.html#Minka00]
 }
 \keyword{Bayesian}
 \keyword{Laplace's}

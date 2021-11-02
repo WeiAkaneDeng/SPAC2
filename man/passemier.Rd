@@ -4,14 +4,14 @@
 \alias{passemier}
 \title{A bias corrected criterion for selecting number of principal components}
 \usage{
-passemier(x = NULL, lambda = NULL, M = NULL, constant = 0.05)
+passemier(lambda = NULL, M = NULL, tau = 0.001, constant = 0.05)
 }
 \arguments{
-\item{x}{a data matrix with the number of rows to be reduced; only complete columns are used.}
+\item{lambda}{a numeric vector of sample eigenvalues of length $n$.}
 
-\item{lambda}{a numeric vector of sample eigenvalues of the covariance matrix of t(\code{x})}
+\item{M}{the number of observations.}
 
-\item{M}{if \code{x} were not supplied, \code{M} should be given as the number of columns of \code{x}.}
+\item{tau}{a tolerance threshold for the smallest eigenvalue, the default value is 0.001.}
 
 \item{constant}{a small prefixed constant and set to the recommended value of 0.05. See Passemier et al., (2017) for details.}
 }
@@ -31,9 +31,7 @@ passemier(lambda = eigen_values, M = 5000)
 
 }
 \references{
-Passemier, Damien, Zhaoyuan Li, and Jianfeng Yao (2017). On estimation of the noise variance
-	in high dimensional probabilistic principal component analysis. \emph{Journal of the Royal Statistical Society:
-	Series B (Statistical Methodology)} \strong{79.1}: 51-67.
+Passemier, D., Li, Z., & Yao, J. (2017). On estimation of the noise variance in high dimensional probabilistic principal component analysis. **Journal of the Royal Statistical Society: Series B (Statistical Methodology)**, *79*(1), 51-67. <doi:10.1111/rssb.12153>
 }
 \keyword{Bayesian}
 \keyword{Laplace's}
