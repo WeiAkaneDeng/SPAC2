@@ -35,6 +35,7 @@
 #' @importFrom mvtnorm rmvt
 #' @importFrom Matrix nearPD
 #' @importFrom pracma randortho
+#' @importFrom stats rnorm
 #'
 #' @examples
 #' \dontrun{
@@ -48,18 +49,23 @@
 #' @export get_data_singular
 #'
 
+
+
+
 get_data_singular <- function(N, K, M, sq_singular = NULL,
                               sigma2 = NULL, last= NULL, trend = NULL,
                               rho = NULL, df = NULL, dist = "norm",
-                              datamat = TRUE) {
+                              datamat = FALSE){
 
-    if (K <= 0 | M <= 0 | N <= 0){
-      stop("Please ensure all of N, K, and M are positive integers")
-    }
+  #set.seed(seed)
 
-    if (K >= N | K >= M) {
-      stop("Please supply an integer K smaller than both N and M")
-    }
+  if (K <= 0 | M <= 0 | N <= 0){
+    stop("Please ensure all of N, K, and M are positive integers")
+  }
+
+  if (K >= N | K >= M) {
+    stop("Please supply an integer K smaller than both N and M")
+  }
 
   N <- as.integer(N);
   K <- as.integer(K);
@@ -75,38 +81,47 @@ get_data_singular <- function(N, K, M, sq_singular = NULL,
     d2 <- rep(NA, K)
 
     if (trend == "equal"){
-	      d2[K] <- last
-	      remain_var <- N-sigma2*N
-	      try(if(remain_var < 0) stop("not enough variance left for the first K-1 eigenvalues"));
-	      d2[1:(K-1)] <- remain_var/K
 
-	    } else  if (trend == "linear"){
-	      d2[K] <- last
-	      remain_var <- N-sigma2*N
-	      try(if(remain_var < 0) stop("not enough variance left for the first K-1 eigenvalues"));
-	      b = (remain_var - (K-1)*d2[K])/(K*(K-1))*2
-	      d2[1:(K-1)] <- d2[K] + b*(K-(1:(K-1)))
+      remain_var <- N-sigma2*N
+      try(if(remain_var < 0) stop("not enough variance left for the first K-1 eigenvalues"));
+      d2[1:K] <- remain_var/K
 
-	    } else if (trend == "quadratic") {
-	      d2[K] <- last
-	      remain_var <- N-sigma2*N
-	      try(if(remain_var < 0) stop("not enough variance left for the first K-1 eigenvalues"));
-	      b = (remain_var - (K-1)*d2[K])/(K*(K-1)*(K-1/2))*3
-	      d2[1:(K-1)] <- d2[K] + b*(K-(1:(K-1)))^2
+    } else if (trend == "linear"){
+      d2[K] <- last
+      remain_var <- N-sigma2*N
+      try(if(remain_var < 0) stop("not enough variance left for the first K-1 eigenvalues"));
+      b = (remain_var - (K-1)*d2[K])/(K*(K-1))*2
+      d2[1:(K-1)] <- d2[K] + b*(K-(1:(K-1)))
 
-	    } else if (trend == "exponential"){
-	      d2[K] <- last
-	      remain_var <- N-sigma2*N
+    } else if (trend == "step"){
+      d2[K] <- last
+      remain_var <- N-sigma2*N
+      try(if(remain_var < 0) stop("not enough variance left for the first K-1 eigenvalues"));
+      K1 <- round(K/2)
+      K2 <- K - round(K/2)
+      ## assume 1:1 step size
+      b = (remain_var-K2*last)/K1
+      d2[1:K1] <- b
+      d2[(K1+1):K] <- last
+    } else if (trend == "quadratic") {
+      d2[K] <- last
+      remain_var <- N-sigma2*N
+      try(if(remain_var < 0) stop("not enough variance left for the first K-1 eigenvalues"));
+      b = (remain_var - (K-1)*d2[K])/(K*(K-1)*(K-1/2))*3
+      d2[1:(K-1)] <- d2[K] + b*(K-(1:(K-1)))^2
 
-	      solve_exp <- function(r){
-	        (1-r^(K-1))*d2[K] - r^(K-1)*(1-r)*(remain_var)
-	      }
-	      r <- stats::uniroot(solve_exp, c(0.0001,1-0.0001))$root
-	      d2[2:(K-1)] <- d2[K]/r^(K-2:(K-1));
-	      d2[1] <- remain_var - sum(d2[-1])
-	      d2 <- sort(d2, decreasing=T)
-	    }
+    } else if (trend == "exponential"){
+      d2[K] <- last
+      remain_var <- N-sigma2*N
 
+      solve_exp <- function(r){
+        (1-r^(K-1))*d2[K] - r^(K-1)*(1-r)*(remain_var)
+      }
+      r <- stats::uniroot(solve_exp, c(0.0001,1-0.0001))$root
+      d2[2:(K-1)] <- d2[K]/r^(K-2:(K-1));
+      d2[1] <- remain_var - sum(d2[-1])
+      d2 <- sort(d2, decreasing=T)
+    }
 
   }else{
 
@@ -116,56 +131,63 @@ get_data_singular <- function(N, K, M, sq_singular = NULL,
 
     if (sum(sq_singular) >= N ){
       stop("Please ensure sum of the squared singular values is less than N,
-           the total amount of standardized variance")
+	           the total amount of standardized variance")
     }
     sigma2 <- 1 - sum(sq_singular)/N
     d2 = sq_singular
-   }
+  }
 
-	   K = length(d2)
-	   U <- pracma::randortho(N)[,1:K]
-	   Lambdaa <- U%*%diag(d2)%*%t(U)
-	   LeftTerm <- MASS::mvrnorm(M, mu=rep(0, N), Sigma = Lambdaa, empirical = T) # M by N
+  K = length(d2)
+  U <- pracma::randortho(N)[,1:K]
+  LeftTerm <- U%*%diag(sqrt(d2))%*%matrix(rnorm(M*K), ncol=M) # N by M
 
-   if (is.null(rho)){
+  if (is.null(rho)){
     rho = 0
-   } else if (rho > 1 | rho < 0){
-   stop("rho should be a value between 0 and 1")
-   }
+  } else if (rho > 1 | rho < 0){
+    stop("rho should be a value between 0 and 1")
+  }
 
 
-       if (dist == "norm"){
+  if (dist == "norm"){
 
-	      error <- MASS::mvrnorm(M, mu=rep(0, N),Sigma = diag(sigma2, N))
+    error <- matrix(rnorm(N*M, sd = sqrt(sigma2)), ncol = M)
 
-	      if (rho != 0){
-	      errorn_AR <- error
-	      errorn_AR[1, ] <- error[1, ]
-	      for(m in 2:M){
-	        errorn_AR[m, ] <- errorn_AR[(m - 1), ]*rho + error[m, ]
-	      }
-	      } else {
-	      	      errorn_AR <- error
-	      }
-
-	      }else{
-
-	        errorT <- sqrt(1/3)*mvtnorm::rmvt(M, sigma = diag(sigma2, N), df = df)
-	        errorn_AR <- errorT
-	        errorn_AR[1, ] <- errorT[1, ]
-	        for(m in 2:M){
-	          errorn_AR[m, ] <- errorn_AR[(m - 1), ]*rho + errorT[m, ]
-	        }
-	      }
-
-	      X <- LeftTerm + errorn_AR
-	      #X <- MASS::mvrnorm(M, mu=rep(0, N),Sigma = diag(c(d2+sigma2, rep(sigma2, N-K))))
-
-	      sam_eigen <- eigen(stats::cov(X))$val
-
-    if (datamat == TRUE) {
-        return(list(X, sam_eigen))
+    if (rho != 0){
+      errorn_AR <- error
+      errorn_AR[,1 ] <- error[,1]
+      for(m in 2:M){
+        errorn_AR[,m] <- errorn_AR[,(m - 1)]*rho + error[,m]
+      }
     } else {
-        return(sam_eigen)
+      errorn_AR <- error
     }
+  }else{
+
+    errorT <- mvtnorm::rmvt(M, sigma = diag(sigma2, N), df = df)
+    errorn_AR <- t(errorT)
+
+    if (rho != 0){
+
+      errorn_AR[,1] <- as.numeric(errorT[1,])
+
+      for(m in 2:M){
+        errorn_AR[, m] <- errorn_AR[,(m - 1)]*rho + as.numeric(errorT[m,])
+      }
+    }
+  }
+
+
+  X <- (LeftTerm) + errorn_AR
+
+  #X2 <- MASS::mvrnorm(M, mu=rep(0, N),Sigma = diag(c(d2+sigma2, rep(sigma2, N-K))))
+  #xst <- doubleCenter(X)
+  #S <- 1/pp*t(xst)%*%(xst)
+  #sam_eigen <- eigen(S)$val
+
+  #sam_eigen <- eigen(cov(X2))$val[1:10]
+  #sum(sam_eigen)
+
+  return(list(X, c(d2, rep(0, N-length(d2)))+sigma2))
+
 }
+

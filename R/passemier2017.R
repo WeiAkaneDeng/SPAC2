@@ -44,7 +44,7 @@ sigma2hat_star(k) + sigma2hat_star(kmax)*k*(c_n+2*sqrt(c_n))*(1+p/n^(1+delta))/n
 
 
 	n <- sum(lambda > tau)
-	which.min(sapply(1:(n-1), function(x) PC_star(k=x, lambda=lambda, p = M)))
+	which.min(sapply(1:(n-1), function(x) PC_star(k=x, lambda=lambda, p = M, n = n)))
 }
 
 

@@ -34,11 +34,11 @@ INFO_ppca <- function(lambda, M, verbose=FALSE, tau = 0.001, AIC = TRUE) {
   n <- length(lambda > tau)
 
   AIClog <- function(lambda, p, n){
-    -p*loglk(lam = lambda, n = n)[[1]] + 2*((1:(n-1))*n+(1:(n-1))/2-(1:(n-1))^2/2)/2
+    -p*loglk(lam = lambda, n = n)[[1]][1:(n-1)] + 2*((1:(n-1))*n+(1:(n-1))/2-(1:(n-1))^2/2)/2
   }
 
   BIClog <- function(lambda, p, n ){
-    -p*loglk(lam = lambda, n = n)[[1]] + log(p)*((1:(n-1))*n+(1:(n-1))/2-(1:(n-1))^2/2)/2
+    -p*loglk(lam = lambda, n = n)[[1]][1:(n-1)] + log(p)*((1:(n-1))*n+(1:(n-1))/2-(1:(n-1))^2/2)/2
 
   }
 

@@ -15,7 +15,7 @@ get_data_singular(
   rho = NULL,
   df = NULL,
   dist = "norm",
-  datamat = TRUE
+  datamat = FALSE
 )
 }
 \arguments{

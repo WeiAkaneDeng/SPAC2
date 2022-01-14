@@ -27,6 +27,8 @@
 #' @author Wei Q. Deng, \email{dengwq@mcmaster.ca} and Radu V. Craiu \email{craiu@utoronto.ca}
 #'
 #' @references Zhu, M., & Ghodsi, A. (2006). Automatic dimensionality selection from the scree plot via the use of profile likelihood. **Computational Statistics & Data Analysis**, *51*(2), 918-930. <doi:10.1016/j.csda.2005.09.010>
+#'
+#' @export ZG
 
 
 ZG <- function(lambda, tau = 0.001, verbose=FALSE){

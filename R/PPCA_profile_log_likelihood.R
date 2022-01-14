@@ -105,6 +105,24 @@ ppcaLog <- function(x = NULL, lambda = NULL, M = NULL, param = NULL, EM = FALSE)
 
 
 
+#' Profile log-likelihood of the PPCA model with sample eigenvalues.
+#'
+#' The function returns the profile log-likelihood
+#'    of the PPCA model for each possible choice of
+#'    \eqn{K (1, 2, \dots, n-1)} at their respective MLEs.
+#'    The maximum choice was set at \eqn{n-1} because when \eqn{K=n},
+#'    the profile log-likelihood is equal to that at \eqn{K=n-1}.
+#'
+#' @param lam a numerical vector of positive sample eigenvalues
+#'
+#' @param n the full dimension
+#'
+#' @param tau  a tolerance threshold for the smallest eigenvalue, the default value is 0.001.
+#'
+#' @return profile log-likelihood of length \eqn{n-1}.
+#'
+#' @export loglk
+
 loglk <- function(lam, n, tau=1e-5){
   nn <- sum(lam > tau)
   sigma2_val <- sapply(1:(nn - 1), function(x) sum(lam[(x + 1):nn])/(n - x))
